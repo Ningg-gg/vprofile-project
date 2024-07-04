@@ -1,0 +1,71 @@
+version: '3.8'
+services:
+  vprodb:
+    build: 
+      context: ./Docker-files/db
+      #context to specify the path where the db dockerfile 
+    image: ningggg/vprofiledb
+      #this is from our dockerhub repository
+    container_name: vprodb
+    ports:
+      - "3306:3306"
+      #ports are specified to be in 3306:3306
+    volumes:
+      - vprodbdata:/var/lib/mysql
+      #vprodata is the name of the volume and this way we will be mounting the db volume
+      #the folder /var/lib/mysql will be mounted on volume named "vprodbdata"
+    environment:
+      - MYSQL_ROOT_PASSWORD=vprodbpass
+
+  vprocache01:
+  #vprocache01 is based on the name on the application.properties
+    image: memcached
+    #official image
+    ports:
+      - "11211:11211"
+
+  vpromq01:
+    image: rabbitmq
+    ports:
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+
+  vproapp:
+    build: 
+      context: ./Docker-files/app
+      #context to specify the path where the db dockerfile 
+    image: ningggg/vprofileapp
+      #this is from our dockerhub repository
+    container_name: vproapp
+    ports:
+      - "8080:8080"
+      #ports are specified to be in 8080:8080
+    volumes:
+      - vproappdata:/usr/local/tomcat/webapps
+
+  vproweb:
+    build: 
+      context: ./Docker-files/web
+      #context to specify the path where the db dockerfile 
+    image: ningggg/vprofileweb
+      #this is from our dockerhub repository
+    container_name: vproweb
+    ports:
+      - "80:80"
+      #ports are specified to be in 8080:8080
+
+volumes:
+#when you run the docker compose, it's going to create this volumes first and when it is building the containers
+#it's gonna map the volume whenever it's specified like vproappdata:/usr/local/tomcat/webapps
+  vprodbdata: {}
+  vproappdata: {}
+
+
+
+
+#all this info are on on source>main>resources>application.properties
+#the Vprofile artifact will be in the tomcat 
+#the vprofile applicaiton will connect to the backend services such as mysql using the information from this file. application.properties
+#when creating the backend container, we get the information from the application.properties
